@@ -26,12 +26,12 @@ class UNetModule(Module):
         while current_image_size > bottleneck_image_size:
             self.downward_modules.append(DownsampleBlock(current_channels, initialization_method))
             current_channels = current_channels * 2
-            current_image_size = current_image_size // 2
+            current_image_size //= 2
             self.downward_module_channel_count[current_image_size] = current_channels
 
         # Bottleneck
         self.bottleneck_modules = ModuleList()
-        for i in range(bottleneck_block_count):
+        for _ in range(bottleneck_block_count):
             self.bottleneck_modules.append(ResNetBlock(current_channels, initialization_method))
 
         # Upsampling
@@ -44,7 +44,7 @@ class UNetModule(Module):
             self.upsampling_modules.insert(0,
                                            UpsampleBlock(input_channels, current_channels // 2, initialization_method))
             current_channels = current_channels // 2
-            current_image_size = current_image_size * 2
+            current_image_size *= 2
 
         self.upsampling_modules.insert(
             0, Conv7Block(current_channels + output_channels, output_channels, initialization_method))

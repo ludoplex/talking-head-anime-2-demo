@@ -27,10 +27,7 @@ class NormalizationLayerFactory(ABC):
 
     @staticmethod
     def resolve_2d(factory: Optional['NormalizationLayerFactory']) -> 'NormalizationLayerFactory':
-        if factory is None:
-            return InstanceNorm2dFactory()
-        else:
-            return factory
+        return InstanceNorm2dFactory() if factory is None else factory
 
 
 class Bias2d(Module):
@@ -48,10 +45,7 @@ class NoNorm2dFactory(NormalizationLayerFactory):
         super().__init__()
 
     def create(self, num_features: int, affine: bool = True) -> Module:
-        if affine:
-            return Bias2d(num_features)
-        else:
-            return PassThrough()
+        return Bias2d(num_features) if affine else PassThrough()
 
 
 class BatchNorm2dFactory(NormalizationLayerFactory):
@@ -65,16 +59,10 @@ class BatchNorm2dFactory(NormalizationLayerFactory):
         self.weight_mean = weight_mean
 
     def get_weight_mean(self):
-        if self.weight_mean is None:
-            return 1.0
-        else:
-            return self.weight_mean
+        return 1.0 if self.weight_mean is None else self.weight_mean
 
     def get_weight_std(self):
-        if self.weight_std is None:
-            return 0.02
-        else:
-            return self.weight_std
+        return 0.02 if self.weight_std is None else self.weight_std
 
     def create(self, num_features: int, affine: bool = True) -> Module:
         module = BatchNorm2d(num_features=num_features, affine=affine)

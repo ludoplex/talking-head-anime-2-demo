@@ -35,25 +35,23 @@ def linear_to_srgb(x):
 
 
 def image_linear_to_srgb(image):
-    assert image.shape[2] == 3 or image.shape[2] == 4
+    assert image.shape[2] in [3, 4]
     if image.shape[2] == 3:
         return linear_to_srgb(image)
-    else:
-        height, width, _ = image.shape
-        rgb_image = linear_to_srgb(image[:, :, 0:3])
-        a_image = image[:, :, 3:4]
-        return numpy.concatenate((rgb_image, a_image), axis=2)
+    height, width, _ = image.shape
+    rgb_image = linear_to_srgb(image[:, :, 0:3])
+    a_image = image[:, :, 3:4]
+    return numpy.concatenate((rgb_image, a_image), axis=2)
 
 
 def image_srgb_to_linear(image):
-    assert image.shape[2] == 3 or image.shape[2] == 4
+    assert image.shape[2] in [3, 4]
     if image.shape[2] == 3:
         return srgb_to_linear(image)
-    else:
-        height, width, _ = image.shape
-        rgb_image = srgb_to_linear(image[:, :, 0:3])
-        a_image = image[:, :, 3:4]
-        return numpy.concatenate((rgb_image, a_image), axis=2)
+    height, width, _ = image.shape
+    rgb_image = srgb_to_linear(image[:, :, 0:3])
+    a_image = image[:, :, 3:4]
+    return numpy.concatenate((rgb_image, a_image), axis=2)
 
 
 def save_rng_state(file_name):
@@ -88,7 +86,7 @@ def grid_change_to_numpy_image(torch_image, num_channels=3):
     elif num_channels == 4:
         return numpy.concatenate([rgb_image, numpy.ones_like(size_image)], axis=2)
     else:
-        raise RuntimeError("Unsupported num_channels: " + str(num_channels))
+        raise RuntimeError(f"Unsupported num_channels: {str(num_channels)}")
 
 
 def rgb_to_numpy_image(torch_image: Tensor, min_pixel_value=-1.0, max_pixel_value=1.0):
@@ -133,8 +131,9 @@ def rgba_to_numpy_image(torch_image: Tensor, min_pixel_value=-1.0, max_pixel_val
     numpy_image = (reshaped_image - min_pixel_value) / (max_pixel_value - min_pixel_value)
     rgb_image = linear_to_srgb(numpy_image[:, :, 0:3])
     a_image = numpy_image[:, :, 3]
-    rgba_image = numpy.concatenate((rgb_image, a_image.reshape(height, width, 1)), axis=2)
-    return rgba_image
+    return numpy.concatenate(
+        (rgb_image, a_image.reshape(height, width, 1)), axis=2
+    )
 
 
 def extract_PIL_image_from_filelike(file):
@@ -151,10 +150,9 @@ def extract_pytorch_image_from_PIL_image(pil_image, scale=2.0, offset=-1.0):
     image = image.reshape(h * w, c)
     for pixel in image:
         if pixel[3] == 0.0:
-            pixel[0:3] = 0.0
+            pixel[:3] = 0.0
     image = image.transpose().reshape(c, h, w)
-    torch_image = torch.from_numpy(image).float() * scale + offset
-    return torch_image
+    return torch.from_numpy(image).float() * scale + offset
 
 
 def extract_numpy_image_from_filelike(file):

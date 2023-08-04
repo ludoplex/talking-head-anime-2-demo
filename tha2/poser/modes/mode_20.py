@@ -117,14 +117,15 @@ class FiveStepPoserComputationProtocol(CachedComputationProtocol):
             eyebrow_morphing_combiner_output = self.get_output(
                 KEY_EYEBROW_MORPHING_COMBINER_OUTPUT, modules, batch, outputs)
             eyebrow_decomposer_output = self.get_output(KEY_EYEBROW_DECOMPOSER_OUTPUT, modules, batch, outputs)
-            output = combiner_output \
-                     + rotater_output \
-                     + face_morpher_output \
-                     + eyebrow_morphing_combiner_output \
-                     + eyebrow_decomposer_output
-            return output
+            return (
+                combiner_output
+                + rotater_output
+                + face_morpher_output
+                + eyebrow_morphing_combiner_output
+                + eyebrow_decomposer_output
+            )
         else:
-            raise RuntimeError("Unsupported key: " + key)
+            raise RuntimeError(f"Unsupported key: {key}")
 
 
 def load_eyebrow_decomposer(file_name: str):
@@ -249,19 +250,19 @@ def create_poser(
     if module_file_names is None:
         module_file_names = {}
     if KEY_EYEBROW_DECOMPOSER not in module_file_names:
-        file_name = dir + "/eyebrow_decomposer.pt"
+        file_name = f"{dir}/eyebrow_decomposer.pt"
         module_file_names[KEY_EYEBROW_DECOMPOSER] = file_name
     if KEY_EYEBROW_MORPHING_COMBINER not in module_file_names:
-        file_name = dir + "/eyebrow_morphing_combiner.pt"
+        file_name = f"{dir}/eyebrow_morphing_combiner.pt"
         module_file_names[KEY_EYEBROW_MORPHING_COMBINER] = file_name
     if KEY_FACE_MORPHER not in module_file_names:
-        file_name = dir + "/face_morpher.pt"
+        file_name = f"{dir}/face_morpher.pt"
         module_file_names[KEY_FACE_MORPHER] = file_name
     if KEY_FACE_ROTATER not in module_file_names:
-        file_name = dir + "/two_algo_face_rotator.pt"
+        file_name = f"{dir}/two_algo_face_rotator.pt"
         module_file_names[KEY_FACE_ROTATER] = file_name
     if KEY_COMBINER not in module_file_names:
-        file_name = dir + "/combiner.pt"
+        file_name = f"{dir}/combiner.pt"
         module_file_names[KEY_COMBINER] = file_name
 
     loaders = {

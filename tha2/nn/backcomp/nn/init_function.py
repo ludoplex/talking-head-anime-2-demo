@@ -13,6 +13,6 @@ def create_init_function(method: str = 'none'):
             xavier_normal_(module.weight)
             return module
         else:
-            raise ("Invalid initialization method %s" % method)
+            raise f"Invalid initialization method {method}"
 
     return init

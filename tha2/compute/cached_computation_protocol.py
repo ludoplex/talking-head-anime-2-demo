@@ -13,12 +13,10 @@ class CachedComputationProtocol(ABC):
                    modules: Dict[str, BatchInputModule],
                    batch: List[Tensor],
                    outputs: Dict[str, List[Tensor]]):
-        if key in outputs:
-            return outputs[key]
-        else:
+        if key not in outputs:
             output = self.compute_output(key, modules, batch, outputs)
             outputs[key] = output
-            return outputs[key]
+        return outputs[key]
 
     @abstractmethod
     def compute_output(self,

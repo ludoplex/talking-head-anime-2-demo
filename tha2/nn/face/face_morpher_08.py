@@ -74,7 +74,7 @@ class FaceMorpher08(BatchInputModule):
             in_channels=current_num_channels + args.num_expression_params,
             out_channels=current_num_channels,
             block_args=args.block_args))
-        for i in range(1, args.num_bottleneck_blocks):
+        for _ in range(1, args.num_bottleneck_blocks):
             self.bottleneck_blocks.append(
                 ResnetBlock.create(
                     num_channels=current_num_channels,
@@ -176,8 +176,13 @@ class FaceMorpher08(BatchInputModule):
         identity = torch.tensor([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], device=device).unsqueeze(0).repeat(n, 1, 1)
         base_grid = affine_grid(identity, [n, c, h, w], align_corners=False)
         grid = base_grid + grid_change
-        resampled_image = grid_sample(image, grid, mode='bilinear', padding_mode='border', align_corners=False)
-        return resampled_image
+        return grid_sample(
+            image,
+            grid,
+            mode='bilinear',
+            padding_mode='border',
+            align_corners=False,
+        )
 
     def apply_color_change(self, alpha, color_change, image: Tensor) -> Tensor:
         return color_change * alpha + image * (1 - alpha)

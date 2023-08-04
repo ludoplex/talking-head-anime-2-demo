@@ -22,11 +22,7 @@ from tha2.util import extract_PIL_image_from_filelike, resize_PIL_image, extract
 
 
 def create_default_blender_data():
-    data = {}
-
-    for blendshape_name in BLENDSHAPE_NAMES:
-        data[blendshape_name] = 0.0
-
+    data = {blendshape_name: 0.0 for blendshape_name in BLENDSHAPE_NAMES}
     data[HEAD_BONE_X] = 0.0
     data[HEAD_BONE_Y] = 0.0
     data[HEAD_BONE_Z] = 0.0
@@ -64,7 +60,7 @@ class ClientProcess(Process):
                 socket_bytes = self.socket.recv(8192)
             except socket.error as e:
                 err = e.args[0]
-                if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
+                if err in [errno.EAGAIN, errno.EWOULDBLOCK]:
                     continue
                 else:
                     raise e
@@ -80,12 +76,11 @@ class ClientProcess(Process):
 
     @staticmethod
     def convert_from_blender_data(blender_data):
-        data = {}
-
         shape_key_values = blender_data["shapeKeyValues"]
-        for blendshape_name in BLENDSHAPE_NAMES:
-            data[blendshape_name] = shape_key_values[blendshape_name]
-
+        data = {
+            blendshape_name: shape_key_values[blendshape_name]
+            for blendshape_name in BLENDSHAPE_NAMES
+        }
         head_bone = blender_data["boneValues"]["armatures"]["bones"]["headBone"]
         data[HEAD_BONE_X] = head_bone["e_rx"]
         data[HEAD_BONE_Y] = head_bone["e_ry"]
@@ -171,70 +166,67 @@ class MainFrame(wx.Frame):
         self.animation_panel.SetSizer(self.animation_panel_sizer)
         self.animation_panel.SetAutoLayout(1)
 
-        if True:
-            self.input_panel = wx.Panel(self.animation_panel, size=(256, 368), style=wx.SIMPLE_BORDER)
-            self.input_panel_sizer = wx.BoxSizer(wx.VERTICAL)
-            self.input_panel.SetSizer(self.input_panel_sizer)
-            self.input_panel.SetAutoLayout(1)
-            self.animation_panel_sizer.Add(self.input_panel, 0, wx.FIXED_MINSIZE)
+        self.input_panel = wx.Panel(self.animation_panel, size=(256, 368), style=wx.SIMPLE_BORDER)
+        self.input_panel_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.input_panel.SetSizer(self.input_panel_sizer)
+        self.input_panel.SetAutoLayout(1)
+        self.animation_panel_sizer.Add(self.input_panel, 0, wx.FIXED_MINSIZE)
 
-            self.source_image_panel = wx.Panel(self.input_panel, size=(256, 256), style=wx.SIMPLE_BORDER)
-            self.source_image_panel.Bind(wx.EVT_PAINT, self.paint_source_image_panel)
-            self.source_image_panel.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase_background)
-            self.input_panel_sizer.Add(self.source_image_panel, 0, wx.FIXED_MINSIZE)
+        self.source_image_panel = wx.Panel(self.input_panel, size=(256, 256), style=wx.SIMPLE_BORDER)
+        self.source_image_panel.Bind(wx.EVT_PAINT, self.paint_source_image_panel)
+        self.source_image_panel.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase_background)
+        self.input_panel_sizer.Add(self.source_image_panel, 0, wx.FIXED_MINSIZE)
 
-            self.load_image_button = wx.Button(self.input_panel, wx.ID_ANY, "Load Image")
-            self.input_panel_sizer.Add(self.load_image_button, 1, wx.EXPAND)
-            self.load_image_button.Bind(wx.EVT_BUTTON, self.load_image)
+        self.load_image_button = wx.Button(self.input_panel, wx.ID_ANY, "Load Image")
+        self.input_panel_sizer.Add(self.load_image_button, 1, wx.EXPAND)
+        self.load_image_button.Bind(wx.EVT_BUTTON, self.load_image)
 
-            self.input_panel_sizer.Fit(self.input_panel)
+        self.input_panel_sizer.Fit(self.input_panel)
 
-        if True:
-            self.pose_converter.init_pose_converter_panel(self.animation_panel)
+        self.pose_converter.init_pose_converter_panel(self.animation_panel)
 
-        if True:
-            self.animation_left_panel = wx.Panel(self.animation_panel, style=wx.SIMPLE_BORDER)
-            self.animation_left_panel_sizer = wx.BoxSizer(wx.VERTICAL)
-            self.animation_left_panel.SetSizer(self.animation_left_panel_sizer)
-            self.animation_left_panel.SetAutoLayout(1)
-            self.animation_panel_sizer.Add(self.animation_left_panel, 0, wx.EXPAND)
+        self.animation_left_panel = wx.Panel(self.animation_panel, style=wx.SIMPLE_BORDER)
+        self.animation_left_panel_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.animation_left_panel.SetSizer(self.animation_left_panel_sizer)
+        self.animation_left_panel.SetAutoLayout(1)
+        self.animation_panel_sizer.Add(self.animation_left_panel, 0, wx.EXPAND)
 
-            self.result_image_panel = wx.Panel(self.animation_left_panel, size=(256, 256), style=wx.SIMPLE_BORDER)
-            self.result_image_panel.Bind(wx.EVT_PAINT, self.paint_result_image_panel)
-            self.result_image_panel.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase_background)
-            self.animation_left_panel_sizer.Add(self.result_image_panel, 0, wx.FIXED_MINSIZE)
+        self.result_image_panel = wx.Panel(self.animation_left_panel, size=(256, 256), style=wx.SIMPLE_BORDER)
+        self.result_image_panel.Bind(wx.EVT_PAINT, self.paint_result_image_panel)
+        self.result_image_panel.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase_background)
+        self.animation_left_panel_sizer.Add(self.result_image_panel, 0, wx.FIXED_MINSIZE)
 
-            self.output_index_choice = wx.Choice(self.animation_left_panel,
-                                                 choices=[str(i) for i in range(self.poser.get_output_length())])
-            self.output_index_choice.SetSelection(0)
-            self.animation_left_panel_sizer.Add(self.output_index_choice, 0, wx.EXPAND)
+        self.output_index_choice = wx.Choice(self.animation_left_panel,
+                                             choices=[str(i) for i in range(self.poser.get_output_length())])
+        self.output_index_choice.SetSelection(0)
+        self.animation_left_panel_sizer.Add(self.output_index_choice, 0, wx.EXPAND)
 
-            separator = wx.StaticLine(self.animation_left_panel, -1, size=(256, 5))
-            self.animation_left_panel_sizer.Add(separator, 0, wx.EXPAND)
+        separator = wx.StaticLine(self.animation_left_panel, -1, size=(256, 5))
+        self.animation_left_panel_sizer.Add(separator, 0, wx.EXPAND)
 
-            background_text = wx.StaticText(self.animation_left_panel, label="--- Background ---",
-                                            style=wx.ALIGN_CENTER)
-            self.animation_left_panel_sizer.Add(background_text, 0, wx.EXPAND)
+        background_text = wx.StaticText(self.animation_left_panel, label="--- Background ---",
+                                        style=wx.ALIGN_CENTER)
+        self.animation_left_panel_sizer.Add(background_text, 0, wx.EXPAND)
 
-            self.output_background_choice = wx.Choice(
-                self.animation_left_panel,
-                choices=[
-                    "TRANSPARENT",
-                    "GREEN",
-                    "BLUE",
-                    "BLACK",
-                    "WHITE"
-                ])
-            self.output_background_choice.SetSelection(0)
-            self.animation_left_panel_sizer.Add(self.output_background_choice, 0, wx.EXPAND)
+        self.output_background_choice = wx.Choice(
+            self.animation_left_panel,
+            choices=[
+                "TRANSPARENT",
+                "GREEN",
+                "BLUE",
+                "BLACK",
+                "WHITE"
+            ])
+        self.output_background_choice.SetSelection(0)
+        self.animation_left_panel_sizer.Add(self.output_background_choice, 0, wx.EXPAND)
 
-            separator = wx.StaticLine(self.animation_left_panel, -1, size=(256, 5))
-            self.animation_left_panel_sizer.Add(separator, 0, wx.EXPAND)
+        separator = wx.StaticLine(self.animation_left_panel, -1, size=(256, 5))
+        self.animation_left_panel_sizer.Add(separator, 0, wx.EXPAND)
 
-            self.fps_text = wx.StaticText(self.animation_left_panel, label="")
-            self.animation_left_panel_sizer.Add(self.fps_text, wx.SizerFlags().Border())
+        self.fps_text = wx.StaticText(self.animation_left_panel, label="")
+        self.animation_left_panel_sizer.Add(self.fps_text, wx.SizerFlags().Border())
 
-            self.animation_left_panel_sizer.Fit(self.animation_left_panel)
+        self.animation_left_panel_sizer.Fit(self.animation_left_panel)
 
         self.animation_panel_sizer.Fit(self.animation_panel)
 

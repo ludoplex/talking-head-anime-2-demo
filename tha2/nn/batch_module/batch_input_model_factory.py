@@ -11,10 +11,10 @@ class BatchInputModelFactory:
         return set(self.module_factories.keys())
 
     def create(self) -> Dict[str, BatchInputModule]:
-        output = {}
-        for name in self.module_factories:
-            output[name] = self.module_factories[name].create()
-        return output
+        return {
+            name: self.module_factories[name].create()
+            for name in self.module_factories
+        }
 
     def get_module_factory(self, module_name) -> BatchInputModuleFactory:
         return self.module_factories[module_name]

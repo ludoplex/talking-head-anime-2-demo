@@ -23,7 +23,7 @@ class EncoderDecoderModule(Module):
             current_size //= 2
             current_channels *= 2
 
-        for i in range(bottleneck_block_count):
+        for _ in range(bottleneck_block_count):
             self.module_list.append(ResNetBlock(current_channels, initialization_method))
 
         while current_size < image_size:

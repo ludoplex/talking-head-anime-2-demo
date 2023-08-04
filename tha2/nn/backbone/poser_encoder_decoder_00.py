@@ -72,7 +72,7 @@ class PoserEncoderDecoder00(Module):
             in_channels=current_num_channels + args.num_pose_params,
             out_channels=current_num_channels,
             block_args=args.block_args))
-        for i in range(1, args.num_bottleneck_blocks):
+        for _ in range(1, args.num_bottleneck_blocks):
             self.bottleneck_blocks.append(
                 ResnetBlock.create(
                     num_channels=current_num_channels,
@@ -101,9 +101,8 @@ class PoserEncoderDecoder00(Module):
             assert pose is not None
         else:
             assert pose is None
-        outputs = []
         feature = image
-        outputs.append(feature)
+        outputs = [feature]
         for block in self.downsample_blocks:
             feature = block(feature)
             outputs.append(feature)

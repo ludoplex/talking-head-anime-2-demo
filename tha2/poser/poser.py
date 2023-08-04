@@ -23,13 +23,13 @@ class PoseParameterGroup:
                  discrete: bool = False,
                  default_value: float = 0.0,
                  range: Optional[Tuple[float, float]] = None):
-        assert arity == 1 or arity == 2
+        assert arity in {1, 2}
         if range is None:
             range = (0.0, 1.0)
         if arity == 1:
             parameter_names = [group_name]
         else:
-            parameter_names = [group_name + "_left", group_name + "_right"]
+            parameter_names = [f"{group_name}_left", f"{group_name}_right"]
         assert len(parameter_names) == arity
 
         self.parameter_names = parameter_names
@@ -77,7 +77,7 @@ class PoseParameters:
                 if name == param_name:
                     return index
                 index += 1
-        raise RuntimeError("Cannot find parameter with name %s" % name)
+        raise RuntimeError(f"Cannot find parameter with name {name}")
 
     def get_parameter_name(self, index: int) -> str:
         assert index >= 0 and index < self.get_parameter_count()
@@ -93,10 +93,7 @@ class PoseParameters:
         return self.pose_parameter_groups
 
     def get_parameter_count(self):
-        count = 0
-        for group in self.pose_parameter_groups:
-            count += group.arity
-        return count
+        return sum(group.arity for group in self.pose_parameter_groups)
 
     class Builder:
         def __init__(self):

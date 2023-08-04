@@ -31,7 +31,7 @@ class MorphCategoryControlPanel(wx.Panel):
 
         self.param_groups = [group for group in param_groups if group.get_category() == pose_param_category]
         self.choice = wx.Choice(self, choices=[group.get_group_name() for group in self.param_groups])
-        if len(self.param_groups) > 0:
+        if self.param_groups:
             self.choice.SetSelection(0)
         self.choice.Bind(wx.EVT_CHOICE, self.on_choice_updated)
         self.sizer.Add(self.choice, 0, wx.EXPAND)
@@ -106,7 +106,11 @@ class RotationControlPanel(wx.Panel):
 
         self.sliders = []
         for param_group in self.param_groups:
-            static_text = wx.StaticText(self, label="--- %s ---" % param_group.get_group_name(), style=wx.ALIGN_CENTER)
+            static_text = wx.StaticText(
+                self,
+                label=f"--- {param_group.get_group_name()} ---",
+                style=wx.ALIGN_CENTER,
+            )
             self.sizer.Add(static_text, 0, wx.EXPAND)
             slider = wx.Slider(self, minValue=-1000, maxValue=1000, value=0, style=wx.HORIZONTAL)
             self.sizer.Add(slider, 0, wx.EXPAND)
@@ -196,7 +200,7 @@ class MainFrame(wx.Frame):
         for category in morph_categories:
             param_groups = self.poser.get_pose_parameter_groups()
             filtered_param_groups = [group for group in param_groups if group.get_category() == category]
-            if len(filtered_param_groups) == 0:
+            if not filtered_param_groups:
                 continue
             control_panel = MorphCategoryControlPanel(
                 self.control_panel,
@@ -214,7 +218,7 @@ class MainFrame(wx.Frame):
         for category in rotation_categories:
             param_groups = self.poser.get_pose_parameter_groups()
             filtered_param_groups = [group for group in param_groups if group.get_category() == category]
-            if len(filtered_param_groups) == 0:
+            if not filtered_param_groups:
                 continue
             control_panel = RotationControlPanel(
                 self.control_panel,
@@ -249,12 +253,13 @@ class MainFrame(wx.Frame):
         self.main_sizer.Add(self.right_panel, 0, wx.FIXED_MINSIZE)
 
     def create_param_category_choice(self, param_category: PoseParameterCategory):
-        params = []
-        for param_group in self.poser.get_pose_parameter_groups():
-            if param_group.get_category() == param_category:
-                params.append(param_group.get_group_name())
+        params = [
+            param_group.get_group_name()
+            for param_group in self.poser.get_pose_parameter_groups()
+            if param_group.get_category() == param_category
+        ]
         choice = wx.Choice(self.control_panel, choices=params)
-        if len(params) > 0:
+        if params:
             choice.SetSelection(0)
         return choice
 
@@ -287,10 +292,7 @@ class MainFrame(wx.Frame):
         self.last_pose = None
 
     def draw_source_image_string(self, widget, use_paint_dc: bool = True):
-        if use_paint_dc:
-            dc = wx.PaintDC(widget)
-        else:
-            dc = wx.ClientDC(widget)
+        dc = wx.PaintDC(widget) if use_paint_dc else wx.ClientDC(widget)
         dc.Clear()
         font = wx.Font(wx.FontInfo(14).Family(wx.FONTFAMILY_SWISS))
         dc.SetFont(font)
@@ -298,7 +300,7 @@ class MainFrame(wx.Frame):
         dc.DrawText(self.source_image_string, 128 - w // 2, 128 - h // 2)
 
     def get_current_pose(self):
-        current_pose = [0.0 for i in range(self.poser.get_num_parameters())]
+        current_pose = [0.0 for _ in range(self.poser.get_num_parameters())]
         for morph_control_panel in self.morph_control_panels.values():
             morph_control_panel.set_param_value(current_pose)
         for rotation_control_panel in self.rotation_control_panels.values():
